@@ -58,7 +58,7 @@
 在桌面端会话里使用宿主内置的 `plugin_manager`：
 
 ```text
-请使用当前桌面端内置的 plugin_manager 安装 dsh-whale-pro。
+请使用当前桌面端内置的 plugin_manager 安装 github:Cdkgfp/dsh-whale-pro。
 先核对当前 profile 与是否已有同名插件；已有安装时先报告来源和版本。
 按该工具支持的操作完成后告诉我安装结果，以及是否需要完全退出客户端再重开。
 ```
@@ -98,9 +98,17 @@ DSH 插件市场/目录的收录规则：
 
 - [DSH-Plugins-Marketplace](https://github.com/bradeGithub/DSH-Plugins-Marketplace) 会每约 2 小时扫描 GitHub `dsh-plugin` topic，无需单独提交。
 - [dshbase](https://dshbase.com/plugins/directory/) 与 [dsh-plugin.org](https://dsh-plugin.org/submit) 也以公开仓库 + `dsh-plugin` topic 为收录入口；第一次收录可能需要一个刷新周期。
-- DSH 内置的 Plugin Hub 只列出能用 npm 一条命令安装的插件。要进入应用内市场，需要把包发布到 npm。
+- DSH 内置的 Plugin Hub 只列出能用 npm 一条命令安装的插件。要进入应用内市场，需要把包发布到 npm；不发布 npm 不会影响上面三个目录站按 GitHub 源收录，但应用内市场不会显示。
 
-发布 npm（包名 `dsh-whale-pro`，当前检测未占用）：
+不发布 npm 时，用户仍可用 GitHub 源安装：
+
+```powershell
+dsh plugin --profile web add github:Cdkgfp/dsh-whale-pro
+```
+
+桌面端则让 plugin_manager 安装 `github:Cdkgfp/dsh-whale-pro`，或克隆后用本地 `link:` 安装。
+
+如果你以后决定发布 npm（包名 `dsh-whale-pro`，当前检测未占用）：
 
 ```powershell
 # 在已登录 npm 的终端执行；需要 npm 账号/2FA
