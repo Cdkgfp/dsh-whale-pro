@@ -9,9 +9,16 @@
   常驻梁文峰 / 梁文谷 / 时间线 / 余额信息栏，大幅优化原插件冗余部分。
 </p>
 
-> GitHub 仓库名为 **dsh-whale-pro**；插件包名仍保留为 `dsh-whale-compact`，用于兼容当前已安装的 DSH profile 与本地 link 安装。两者是同一个项目，不是两个插件。
+> 插件包名、挂载 id 与 GitHub 仓库名统一为 **dsh-whale-pro**。
 
 > 本仓库是 [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) 的简洁分支（fork），基于上游 0.4.2 改造。原始代码与素材版权归上游作者所有，详见 [LICENSE](LICENSE) 与 [PROVENANCE.md](PROVENANCE.md)。
+
+## 展示
+
+| 常驻信息栏 | 设置页 |
+| :---: | :---: |
+| <img src="docs/screenshot-panel.png" width="440" alt="鲸鱼头顶的峰谷/时间线/余额信息栏"> | <img src="docs/screenshot-settings.png" width="300" alt="dsh-whale-pro 设置页"> |
+| 梁文峰 / 梁文谷 / 时间线 / 余额 / 今日已用 | 外观、行为、音效、自动提示泡泡 |
 
 ## 特性
 
@@ -51,7 +58,7 @@
 在桌面端会话里使用宿主内置的 `plugin_manager`：
 
 ```text
-请使用当前桌面端内置的 plugin_manager 安装 dsh-whale-compact。
+请使用当前桌面端内置的 plugin_manager 安装 dsh-whale-pro。
 先核对当前 profile 与是否已有同名插件；已有安装时先报告来源和版本。
 按该工具支持的操作完成后告诉我安装结果，以及是否需要完全退出客户端再重开。
 ```
@@ -88,7 +95,7 @@ dsh plugin --profile web add link:.
 
 ```text
 dsh-whale-pro/
-├── package.json              # DSH bundle 插件元数据（包名 dsh-whale-compact）
+├── package.json              # DSH bundle 插件元数据（包名 dsh-whale-pro）
 ├── cordis.patch.yml          # 插件挂载声明
 ├── icon.png                  # 插件图标
 ├── lib/
@@ -98,6 +105,9 @@ dsh-whale-pro/
 │   ├── whale-widget.js       # 前端挂件本体
 │   ├── DSniang1.png          # 小鲸鱼本体
 │   └── ...                   # 内置音效、动图、展示图
+├── docs/
+│   ├── screenshot-panel.png  # 信息栏展示图
+│   └── screenshot-settings.png # 设置页展示图
 ├── README.md
 ├── LICENSE
 ├── PROVENANCE.md             # 素材来源与许可范围

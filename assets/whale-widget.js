@@ -1312,7 +1312,7 @@ var styleEl = document.createElement('style')
 // 「当前正在物化的那个插件」名下，之后该插件热重载/失效时 removeOwnedStyles 会把它
 // 一起删掉。样式一没，挂件 20 多个 dshwv-* 节点就从 position:fixed 掉回文档流堆在
 // 页面底部（页面被撑到几千像素高）。打上自己的名字后就不会被任何人认领/删除。
-styleEl.setAttribute('data-plugin', 'dsh-whale-compact')
+styleEl.setAttribute('data-plugin', 'dsh-whale-pro')
 styleEl.textContent = css
 document.head.appendChild(styleEl)
 
@@ -5159,7 +5159,7 @@ function usageAlertBudgetEditor(key, onSave) {
     remindZStyle.id = 'dshw-remind-overlay-z'
     // 同上（PR #114）：本文本表同样必须自带 data-plugin，否则会被别的客户端插件
     // 热重载时顺带删掉，提醒编辑期的遮罩层级就失效了。
-    remindZStyle.setAttribute('data-plugin', 'dsh-whale-compact')
+    remindZStyle.setAttribute('data-plugin', 'dsh-whale-pro')
     // 提醒编辑期间:窗口内可能弹出的全屏遮罩(确认/裁剪/音频/快照)统一置顶,杜绝层级错位。
     // 注意:不要把 .dshwv-usage-mask 放进来——「模型子菜单/模型设置」用的是这个类(29000),
     // 一提权就会反盖到提醒编辑器(30000)上面。
