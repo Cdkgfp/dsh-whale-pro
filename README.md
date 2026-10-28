@@ -51,7 +51,41 @@
 
 ## 安装
 
-### 官方桌面端（推荐）
+### 让 AI 帮你装（推荐，直接复制）
+
+把下面整段发给 DSH 里的 AI，或任意能执行命令的 AI：
+
+```text
+请帮我安装/更新 DSH 插件 dsh-whale-pro，仓库地址：
+https://github.com/Cdkgfp/dsh-whale-pro
+
+先判断当前运行形态，再选择对应安装方式：
+- 官方桌面客户端（Desktop / Electron）：使用宿主内置的 plugin_manager 安装
+  github:Cdkgfp/dsh-whale-pro；不要执行 dsh plugin --profile desktop ...，
+  也不要手工修改 desktop profile 或宿主托管的 package.json / pnpm-lock.yaml。
+- dsh web / CLI：执行
+  dsh plugin --profile web add github:Cdkgfp/dsh-whale-pro
+
+安装前检查是否已存在旧安装（dsh-whale-compact 或 dsh-whale-pro）：
+- 先报告当前 profile、来源和版本；
+- 需要替换旧包时，用宿主支持的方式先卸载，再安装新包；
+- 不要删除用户的账本、设置、角色图、音频、泡泡图片或凭据；
+- 不要为了安装直接改写宿主 profile 文件，也不要绕过 desktop profile 的限制。
+
+如果 plugin_manager 不接受 github: 安装源：
+- 把仓库克隆到一个固定、不会移动的目录；
+- 再用 plugin_manager 的本地 link: 方式安装该目录；
+- 最后确认挂载 id 和包名都是 dsh-whale-pro。
+
+安装后核对并告诉我：
+1) 当前 profile 的 bundles 里是否有 dsh-whale-pro；
+2) 插件版本是否为 0.4.3；
+3) 是否需要完全退出 DSH（含托盘）再重新打开。
+
+不要自动重启 DSH。如果需要重启，只提示我手动操作；不要索要或上传我的 API key、token 或凭据。
+```
+
+### 官方桌面端（手动操作）
 
 桌面端读取的是 `desktop` profile。`dsh plugin` 命令**按设计拒绝**直接操作 `desktop` profile，所以不要在桌面端照搬下面的 `--profile web` 命令。
 
