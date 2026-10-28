@@ -85,6 +85,39 @@ dsh plugin --profile web add link:.
 
 > 桌面端请使用 `plugin_manager`，不要执行 `dsh plugin --profile desktop ...`，也不要手工修改桌面端托管的 profile 文件。
 
+## 发布与收录
+
+本仓库已经做了让插件站能发现它的基础项：
+
+- 公开 GitHub 仓库；
+- 仓库 topics 包含 `dsh-plugin`、`dsh`、`deepseek-harness`；
+- 根目录有 `package.json`、`cordis.patch.yml`、README、MIT 许可和安装命令；
+- 已创建 [v0.4.3 Release](https://github.com/Cdkgfp/dsh-whale-pro/releases/tag/v0.4.3)。
+
+DSH 插件市场/目录的收录规则：
+
+- [DSH-Plugins-Marketplace](https://github.com/bradeGithub/DSH-Plugins-Marketplace) 会每约 2 小时扫描 GitHub `dsh-plugin` topic，无需单独提交。
+- [dshbase](https://dshbase.com/plugins/directory/) 与 [dsh-plugin.org](https://dsh-plugin.org/submit) 也以公开仓库 + `dsh-plugin` topic 为收录入口；第一次收录可能需要一个刷新周期。
+- DSH 内置的 Plugin Hub 只列出能用 npm 一条命令安装的插件。要进入应用内市场，需要把包发布到 npm。
+
+发布 npm（包名 `dsh-whale-pro`，当前检测未占用）：
+
+```powershell
+# 在已登录 npm 的终端执行；需要 npm 账号/2FA
+npm login
+npm publish --access public
+```
+
+发布后安装命令为：
+
+```powershell
+dsh plugin --profile web add dsh-whale-pro
+```
+
+桌面端则用宿主内置 `plugin_manager` 安装 `dsh-whale-pro`。发布后也可以到 [dsh-plugin.org 提交页](https://dsh-plugin.org/submit) 和 [dshbase 提交入口](https://github.com/ylwl1997/dshbase/issues/new?template=plugin-submission.yml) 提交一次，加快人工核验。
+
+> 当前仓库尚未发布到 npm；在 npm 发布前，GitHub 源安装（上面的 `github:` 命令）仍然可用。
+
 ## 兼容性
 
 - 开发与测试环境：DSH Desktop `0.2.1-rc.3`（Electron 桌面客户端）。

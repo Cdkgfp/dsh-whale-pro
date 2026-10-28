@@ -35,3 +35,4 @@ desktop.ini
 dist/
 out/
 *.zip
+*.tgz
