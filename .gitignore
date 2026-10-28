@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Runtime data (must never be committed)
+.dshw-size.json
+.dshw-usage.json
+.dshw-usage-archive.json
+.dshw-bubble.json
+.dshw-turn.json
+.dshw-api.json
+.dshw-codex.json
+whale-roles/
+whale-audio/
+whale-bubble-imgs/
+*.dshw-*.json
+
+# Local backups / logs
+*.bak
+*.bak-*
+*.log
+logs/
+.dsh-whale-*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Build output / local packaging
+dist/
+out/
+*.zip

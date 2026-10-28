@@ -1,0 +1,43 @@
+{
+  "name": "dsh-whale-compact",
+  "version": "0.4.2",
+  "description": "DSH 桌面端右下角的小鲸鱼简洁版：头顶常驻余额/峰谷/时间线信息栏，保留自动提示泡泡，去掉手动点击大泡泡。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "balance",
+    "widget",
+    "whale"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./icon.png",
+  "files": [
+    "lib",
+    "assets",
+    "icon.png",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "PROVENANCE.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "author": "Cdkgfp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cdkgfp/dsh-whale-compact.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Cdkgfp/dsh-whale-compact/issues"
+  },
+  "homepage": "https://github.com/Cdkgfp/dsh-whale-compact#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}
