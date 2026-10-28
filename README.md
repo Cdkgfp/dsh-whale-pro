@@ -1,19 +1,22 @@
-# dsh-whale-compact
+# dsh-whale-pro
 
 <p align="center">
-  <img src="icon.png" width="96" height="96" alt="dsh-whale-compact icon">
+  <img src="icon.png" width="96" height="96" alt="dsh-whale-pro icon">
 </p>
 
 <p align="center">
-  DeepSeek Harness（DSH）桌面端右下角的<strong>小鲸鱼简洁版</strong>挂件：头顶常驻一条紧凑信息栏，保留自动提示泡泡，去掉手动点击大泡泡。
+  <strong>DSH 桌面端小鲸鱼简洁版</strong><br>
+  常驻梁文峰 / 梁文谷 / 时间线 / 余额信息栏，大幅优化原插件冗余部分。
 </p>
+
+> GitHub 仓库名为 **dsh-whale-pro**；插件包名仍保留为 `dsh-whale-compact`，用于兼容当前已安装的 DSH profile 与本地 link 安装。两者是同一个项目，不是两个插件。
 
 > 本仓库是 [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) 的简洁分支（fork），基于上游 0.4.2 改造。原始代码与素材版权归上游作者所有，详见 [LICENSE](LICENSE) 与 [PROVENANCE.md](PROVENANCE.md)。
 
 ## 特性
 
 - **常驻信息栏**：在鲸鱼头顶显示余额、赠金、充值余额、今日已用。
-- **峰谷进度条**：24 小时连续峰谷/谷时进度条，带当前时间线。
+- **峰谷进度条**：梁文峰 / 梁文谷 / 时间线连续展示，带当前时间线。
 - **独立自动泡泡**：余额变化、提问、每轮消耗、授权、余额预警、今日预算；每种都有独立开关、内容编辑和预览。
 - **移除手动点击泡泡**：点击鲸鱼不再打开旧的大泡泡；自动提示泡泡保留。
 - **内联设置页**：外观 / 行为 / 音效 / 自动提示泡泡四类，横线分隔，胶囊开关，修改即时生效。
@@ -58,7 +61,7 @@
 ### DSH Web
 
 ```powershell
-dsh plugin --profile web add github:Cdkgfp/dsh-whale-compact
+dsh plugin --profile web add github:Cdkgfp/dsh-whale-pro
 ```
 
 安装后重启 `dsh web`，再按 `Ctrl+F5` 刷新页面。
@@ -66,8 +69,8 @@ dsh plugin --profile web add github:Cdkgfp/dsh-whale-compact
 ### 本地开发安装
 
 ```powershell
-git clone https://github.com/Cdkgfp/dsh-whale-compact.git
-cd dsh-whale-compact
+git clone https://github.com/Cdkgfp/dsh-whale-pro.git
+cd dsh-whale-pro
 dsh plugin --profile web add link:.
 ```
 
@@ -84,8 +87,8 @@ dsh plugin --profile web add link:.
 ## 目录结构
 
 ```text
-dsh-whale-compact/
-├── package.json              # DSH bundle 插件元数据
+dsh-whale-pro/
+├── package.json              # DSH bundle 插件元数据（包名 dsh-whale-compact）
 ├── cordis.patch.yml          # 插件挂载声明
 ├── icon.png                  # 插件图标
 ├── lib/

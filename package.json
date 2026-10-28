@@ -1,7 +1,7 @@
 {
   "name": "dsh-whale-compact",
   "version": "0.4.2",
-  "description": "DSH 桌面端右下角的小鲸鱼简洁版：头顶常驻余额/峰谷/时间线信息栏，保留自动提示泡泡，去掉手动点击大泡泡。",
+  "description": "DSH 桌面端小鲸鱼简洁版：常驻梁文峰/梁文谷/时间线/余额信息栏，大幅优化原插件冗余部分",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -28,12 +28,12 @@
   "author": "Cdkgfp",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Cdkgfp/dsh-whale-compact.git"
+    "url": "git+https://github.com/Cdkgfp/dsh-whale-pro.git"
   },
   "bugs": {
-    "url": "https://github.com/Cdkgfp/dsh-whale-compact/issues"
+    "url": "https://github.com/Cdkgfp/dsh-whale-pro/issues"
   },
-  "homepage": "https://github.com/Cdkgfp/dsh-whale-compact#readme",
+  "homepage": "https://github.com/Cdkgfp/dsh-whale-pro#readme",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

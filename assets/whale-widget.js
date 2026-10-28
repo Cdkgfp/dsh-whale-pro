@@ -3499,8 +3499,8 @@ function aboutRender() {
     bb.addEventListener('click', function (e) { e.stopPropagation(); fn() })
     acts.appendChild(bb)
   }
-  btn('仓库', function () { aboutOpenLink('https://github.com/Cdkgfp/dsh-whale-compact') })
-  btn('更新日志', function () { aboutOpenLink('https://github.com/Cdkgfp/dsh-whale-compact/releases') })
+  btn('仓库', function () { aboutOpenLink('https://github.com/Cdkgfp/dsh-whale-pro') })
+  btn('更新日志', function () { aboutOpenLink('https://github.com/Cdkgfp/dsh-whale-pro/releases') })
   btn('复制以上全部信息', function () { aboutCopyText(aboutDiagText(aboutData)) }, true)
   el.appendChild(acts)
   el.appendChild(aboutEl('div', 'dshwv-about-note', '点任意一行复制该行；每节标题右侧可整节复制。自检只访问本机两条插件路由（不联网、不耗 token）。前端改动需 Ctrl+F5，宿主改动需重启服务。'))

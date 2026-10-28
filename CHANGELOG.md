@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.4.2 — compact fork
+## 0.4.2 — dsh-whale-pro
+
+GitHub repository: `dsh-whale-pro`; plugin package name remains `dsh-whale-compact` for install compatibility.
 
 - Added a compact balance/peak-valley/current-time panel above the whale.
 - Removed the manual click bubble; retained automatic bubbles for balance changes, questions, turn cost, approvals, alerts and budget.

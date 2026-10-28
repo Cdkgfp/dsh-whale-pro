@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking a look at `dsh-whale-compact`.
+Thanks for taking a look at `dsh-whale-pro` (plugin package name: `dsh-whale-compact`).
 
 ## Before opening an issue
 

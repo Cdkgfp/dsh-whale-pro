@@ -1,11 +1,11 @@
 # ============================================================================
-# dsh-whale-compact —— DSH bundle patch
+# dsh-whale-pro / package dsh-whale-compact —— DSH bundle patch
 # ============================================================================
 # 这是插件的“挂载声明”。DSH 启动时按 bundle 层栈叠加各插件 patch，
 # 本文件会把小鲸鱼简洁版挂件插入 DSH 配置树。
 #
 # 安装（Web）：
-#   dsh plugin --profile web add github:Cdkgfp/dsh-whale-compact
+#   dsh plugin --profile web add github:Cdkgfp/dsh-whale-pro
 # 或本地开发：
 #   dsh plugin --profile web add link:<本目录绝对路径>
 #
