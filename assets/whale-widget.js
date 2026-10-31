@@ -5540,7 +5540,7 @@ function openApiModelPanel(modelId) {
     // 同键（如 siliconflow CN/EN、moonshot CN/国际）再按名称排，保证顺序稳定。
     var tplList = []
     for (var ti = 0; ti < apiTemplates.length; ti++) {
-      if (apiTemplates[ti].builtin) continue
+      if (apiTemplates[ti].builtin && !(m && m.builtin && apiTemplates[ti].id === m.provider)) continue
       var tplName = String(apiTemplates[ti].name || apiTemplates[ti].id)
       tplList.push({
         id: apiTemplates[ti].id,
@@ -5571,8 +5571,9 @@ function openApiModelPanel(modelId) {
     card.appendChild(apiPanelRow('币种', curSel))
     // 密钥
     card.appendChild(apiSec('密钥'))
-    var keyRefInp = apiTextInput(isNew ? '' : m.keyRef, '凭据名，例如 OPENROUTER_API_KEY')
-    keyRefInp.title = '写入 DSH 官方凭据（.credentials.yaml）时使用的名字'
+    var keyRefInp = apiTextInput(isNew ? '' : m.keyRef, '内置凭据名或 DSHW_MY_GATEWAY')
+    keyRefInp.title = '使用内置厂商凭据名；自定义名字请以 DSHW_ 开头'
+    if (m && m.builtin) keyRefInp.disabled = true
     card.appendChild(apiPanelRow('凭据名', keyRefInp))
     var keyInp = document.createElement('input')
     keyInp.type = 'password'
@@ -5593,7 +5594,8 @@ function openApiModelPanel(modelId) {
     var delKey = apiBtn('删除密钥', 'dshwv-snapbtn dshwv-snapbtn-no', function () {
       var ref = (keyRefInp.value || '').trim()
       if (!ref) return
-      postApiModels({ action: 'delete-key', keyRef: ref }, function () {
+      postApiModels({ action: 'delete-key', keyRef: ref }, function (result) {
+        if (!result || !result.ok) { keyState.textContent = '删除失败: ' + ((result && result.error) || '请求失败'); return }
         keyState.textContent = '密钥已删除'
         // 列表里的"已配置/未配置"显示在静态区模型行 → 必须重建子界面（只刷记录区不够）
         refreshModelList()

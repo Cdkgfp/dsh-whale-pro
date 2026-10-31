@@ -1,6 +1,6 @@
 {
   "name": "dsh-whale-pro",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "DSH 桌面端小鲸鱼简洁版：常驻梁文峰/梁文谷/时间线/余额信息栏，大幅优化原插件冗余部分",
   "keywords": [
     "dsh",
@@ -43,5 +43,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  }
 }

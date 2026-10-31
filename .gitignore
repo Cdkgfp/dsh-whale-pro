@@ -36,3 +36,4 @@ dist/
 out/
 *.zip
 *.tgz
+test/.runtime-*/

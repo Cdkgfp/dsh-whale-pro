@@ -29,7 +29,7 @@
 - **内联设置页**：外观 / 行为 / 音效 / 自动提示泡泡四类，横线分隔，胶囊开关，修改即时生效。
 - **音效管理**：按压、任务结束、提问、授权四类音量与试听；音频片段导入、试听、删除；音效组选择。
 - **图片管理**：角色图在「外观」中管理并可直接删除；泡泡图片库在「自动提示泡泡」中管理。
-- **本地记账**：余额变化按观测累计今日已用；数据保存在本机 `$DSH_HOME`，插件不接管、不上传你的 API 密钥。
+- **本地记账**：余额变化按观测累计今日已用；数据保存在本机 `$DSH_HOME`，API 密钥通过宿主凭据服务管理，不写入插件配置。
 
 ## 界面与操作
 
@@ -45,9 +45,13 @@
 
 ## 前置条件
 
+- **宿主认证能力是必需条件**：DSH 必须提供 `connection.requestRejection(req)`，请求须通过宿主登录认证。认证接口缺失、服务查找失败、调用异常或返回值不符合约定时，插件路由拒绝访问（HTTP 503）；宿主返回的 401/403 会保留。不会退回仅凭回环地址或来源头放行。
+- 写操作默认还要求真实连接对端和请求 Host 都是回环地址。远端管理须同时通过宿主认证和宿主的可信主机检查，并显式配置 `DSHW_ADMIN_HOSTS`（逗号分隔，可带端口）；该设置不能关闭认证。反向代理部署还须在代理入口限制管理访问，插件不信任 `X-Forwarded-For` 等头来证明本机身份。
 - 余额取数优先使用 DSH 凭据中的 `DEEPSEEK_API_KEY`；如果只登录了 DeepSeek 账号、没有配置 API key，较新的 DSH 会自动使用账号登录态。
 - 未配置凭据时挂件仍会加载，但余额/今日已用等数据会显示为空或 `—`，不会影响 DSH 本身。
 - 插件面向 DSH Desktop；Web 模式也可以安装，但桌面端请用宿主内置的 `plugin_manager`。
+- 凭据读写限于内置厂商凭据名和 `DSHW_` 开头的自定义名字（最多 64 个字母、数字或下划线）。升级前若使用其他自定义名字，需要在模型设置中改用 `DSHW_` 名字并重新配置密钥；插件不会自动改名或删除旧凭据。
+- 自定义接口仍支持本机模型与内网网关；云元数据、link-local、映射后的危险 IP 及解析到这些地址的域名会被拒绝。余额、额度和探活接口不跟随重定向，请填写最终地址。
 
 ## 安装
 
@@ -79,7 +83,7 @@ https://github.com/Cdkgfp/dsh-whale-pro
 
 安装后核对并告诉我：
 1) 当前 profile 的 bundles 里是否有 dsh-whale-pro；
-2) 插件版本是否为 0.4.3；
+2) 插件版本是否为 0.4.4；
 3) 是否需要完全退出 DSH（含托盘）再重新打开。
 
 不要自动重启 DSH。如果需要重启，只提示我手动操作；不要索要或上传我的 API key、token 或凭据。
@@ -126,7 +130,7 @@ dsh plugin --profile web add link:.
 - 公开 GitHub 仓库；
 - 仓库 topics 包含 `dsh-plugin`、`dsh`、`deepseek-harness`；
 - 根目录有 `package.json`、`cordis.patch.yml`、README、MIT 许可和安装命令；
-- 已创建 [v0.4.3 Release](https://github.com/Cdkgfp/dsh-whale-pro/releases/tag/v0.4.3)。
+- 当前正式版为 [v0.4.4 Release](https://github.com/Cdkgfp/dsh-whale-pro/releases/tag/v0.4.4)，包含认证安全修复。
 
 DSH 插件市场/目录的收录规则：
 
@@ -162,7 +166,8 @@ dsh plugin --profile web add dsh-whale-pro
 
 ## 兼容性
 
-- 开发与测试环境：DSH Desktop `0.2.1-rc.3`（Electron 桌面客户端）。
+- 原版本的桌面开发环境记录：DSH Desktop `0.2.1-rc.3`（Electron 桌面客户端）。本次 `0.4.4` 修复执行了隔离后端回归，尚未在真实桌面会话中复测。
+- `0.4.4` 通过运行时能力检查强制要求宿主准入接口。本机 `0.2.1-rc.5` 的安装包包含该接口；尚未据此承诺最低兼容版本。缺少该能力的旧宿主不能使用插件接口，需要升级 DSH。
 - 插件结构是标准 DSH bundle 包；宿主 API 变化时可能需要跟随适配。
 - 前端 `assets/whale-widget.js` 由宿主按 mtime 热读取；修改前端后刷新页面即可，修改宿主 `lib/index.js` 需要重启 DSH。
 
@@ -175,7 +180,9 @@ dsh-whale-pro/
 ├── icon.png                  # 插件图标
 ├── lib/
 │   ├── index.js              # 宿主侧：路由、记账、音效/图片/角色服务
-│   └── accounting.mjs        # 记账内核
+│   ├── accounting.mjs        # 记账内核
+│   ├── security.mjs          # 宿主准入、方法限制、配置和地址校验
+│   └── api-request.mjs       # 固定 DNS 校验结果、不跟随跳转的 API 请求
 ├── assets/
 │   ├── whale-widget.js       # 前端挂件本体
 │   ├── DSniang1.png          # 小鲸鱼本体
@@ -206,8 +213,9 @@ dsh-whale-pro/
 ## 数据与隐私
 
 - 插件通过 DSH 的凭据服务读取余额，不在自己的配置文件中保存 API 密钥。
+- 设置页可通过宿主服务保存或删除允许范围内的 API 密钥；这些操作必须通过宿主认证与管理连接检查，不能操作宿主的结构化登录记录。
 - 记账、角色图、泡泡图、音频片段均保存在本机。
-- 插件只请求余额/用量所需的接口；不会把本地账本、聊天内容或凭据上传到本仓库或第三方。
+- 密钥仅用于对应厂商接口或用户显式允许的自定义接口；不会上传到本仓库。版本检查会请求公开的软件包版本源，不携带 API 密钥或账本内容。
 - 公开 issue 时请勿附带 API key、完整凭据、未脱敏日志或包含个人路径的截图。
 
 ## 开发
@@ -215,7 +223,12 @@ dsh-whale-pro/
 ```powershell
 # 语法检查（使用 DSH 自带 Node）
 node --check lib/index.js
+node --check lib/security.mjs
+node --check lib/api-request.mjs
 node --check assets/whale-widget.js
+
+# 安全回归：Node 内置测试，无需安装依赖，不访问真实凭据或外部接口
+npm test
 
 # 前端改动后刷新页面；宿主改动后重启 DSH
 ```
@@ -224,6 +237,8 @@ node --check assets/whale-widget.js
 
 - `lib/index.js`：宿主路由（`/dsh-whale/*`）、记账、音效/图片/角色文件服务。
 - `lib/accounting.mjs`：金额定点运算与余额观测/校正。
+- `lib/security.mjs`、`lib/api-request.mjs`：认证、配置安全和对外请求边界。
+- `test/`：认证失效、全部路由、凭据范围、原型污染、DNS/地址与重定向回归。
 - `assets/whale-widget.js`：前端 UI、紧凑信息栏、设置页和自动泡泡引擎。
 
 ## 许可

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.4 — backend security fixes
+
+- Require host admission for every plugin route; missing or failed authentication now denies access instead of falling back to Host/Origin checks. Preserve host 401/403 responses.
+- Require real loopback connections for local writes, keep explicitly configured authenticated admin authorities, and enforce per-route HTTP methods.
+- Restrict credential references to built-in provider names or the `DSHW_` namespace, remove structured-record deletion fallback, and preserve built-in DeepSeek key updates without endpoint overrides.
+- Reject unsafe/unknown model IDs and inherited provider names; recursively sanitize configuration keys to prevent prototype pollution.
+- Block mapped metadata/link-local addresses, validate and pin DNS answers for API requests, refuse redirects, and cap responses at 2 MiB. Local models and private gateways remain supported.
+- Remove invalid `undefined...` runtime-data fallback paths and add dependency-free backend security regression tests.
+
 ## 0.4.3 — dsh-whale-pro
 
 - Renamed the plugin package, DSH mount id and GitHub repository to `dsh-whale-pro`.
