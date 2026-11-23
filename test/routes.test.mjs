@@ -19,14 +19,19 @@ test('registered backend routes enforce admission before data access and preserv
     fs.rmSync(tempRoot, { recursive: true, force: true })
   })
   const routes = new Map()
+  const listeners = new Map()
   const cleanups = []
   const credentialCalls = []
   let structuredDeletionCalls = 0
   let credentialReads = 0
   let conn = { requestRejection: () => undefined }
+  let account
   const ctx = {
-    get(name) { return name === 'connection' ? conn : null },
-    on() { return () => {} },
+    get(name) {
+      if (name === 'connection') return conn
+      if (name === 'deepseekAccount') return account
+    },
+    on(name, fn) { listeners.set(name, fn); return () => listeners.delete(name) },
     effect(fn) { const cleanup = fn(); if (typeof cleanup === 'function') cleanups.push(cleanup) },
     inject(names, fn) { fn(ctx) },
     credentials: {
@@ -67,8 +72,43 @@ test('registered backend routes enforce admission before data access and preserv
     const config = JSON.parse((await invoke('/dsh-whale/size.json', 'GET')).body)
     assert.equal(config.scale, 1.25)
     assert.equal(config.sound, false)
-    assert.equal(config.version, '0.4.4')
+    const manifest = JSON.parse(fs.readFileSync(path.join(testRoot, '..', 'package.json'), 'utf8'))
+    assert.equal(config.version, manifest.version)
     assert.equal((await invoke('/dsh-whale/size.json', 'PUT', { scale: 2 }, { remoteAddress: '192.0.2.8' })).status, 403)
+  })
+  await t.test('account login reads bonus-only wallets even if the optional account state rejects', async () => {
+    const wallet = { status: 'ready', value: [], bonusWallets: [{ currency: 'CNY', balance: '1.25' }] }
+    account = {
+      async getState() { throw new Error('unavailable') },
+      async getBalance() { return wallet },
+    }
+    const readBalance = async () => JSON.parse((await invoke('/dsh-whale/balance.json?refresh=1', 'GET')).body)
+    const ready = await readBalance()
+    assert.equal(ready.ok, true)
+    assert.equal(ready.balanceSource, 'account')
+    assert.equal(ready.totalBalance, 1.25)
+    assert.equal(ready.rechargeBalance, 0)
+    assert.equal(ready.bonusBalance, 1.25)
+    account.getState = async () => ({ status: 'signed-out' })
+    account.getBalance = async () => null
+    const signedOut = await readBalance()
+    assert.equal(signedOut.ok, false)
+    assert.match(signedOut.error, /未登录 DeepSeek 账号/)
+    account = undefined
+  })
+  await t.test('tracks native and programmatic questions by session and call ID', async () => {
+    const emit = (session, type, data) => listeners.get('session/event')({ id: session }, { type, data })
+    const pending = async () => JSON.parse((await invoke('/dsh-whale/wait.json', 'GET')).body).pending
+    emit('chat', 'tool/call', { name: 'ask_user_question', callId: 'ask' })
+    emit('chat', 'tool/result', { message: { source: { callId: 'another' } } })
+    assert.equal((await pending()).id, 'ask')
+    emit('chat', 'tool/result', { message: { source: { callId: 'ask' } } })
+    assert.equal(await pending(), null)
+    emit('chat', 'tool/ptc-dispatch-start', { name: 'ask_user_question', callId: 'outer', subCallId: 'inner' })
+    emit('other', 'turn/end', { turn: 1 })
+    assert.equal((await pending()).id, 'inner')
+    emit('chat', 'tool/ptc-dispatch', { name: 'ask_user_question', callId: 'outer', subCallId: 'inner' })
+    assert.equal(await pending(), null)
   })
   await t.test('GET cannot delete or pin resources', async () => {
     for (const routePath of ['/dsh-whale/role-pin.json', '/dsh-whale/role-delete.json', '/dsh-whale/bubble-img-upload.json']) assert.equal((await invoke(routePath, 'GET', { id: 'role_test', action: 'delete' })).status, 405)

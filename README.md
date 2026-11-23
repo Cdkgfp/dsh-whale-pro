@@ -83,7 +83,7 @@ https://github.com/Cdkgfp/dsh-whale-pro
 
 安装后核对并告诉我：
 1) 当前 profile 的 bundles 里是否有 dsh-whale-pro；
-2) 插件版本是否为 0.4.4；
+2) 插件版本是否为 0.4.5；
 3) 是否需要完全退出 DSH（含托盘）再重新打开。
 
 不要自动重启 DSH。如果需要重启，只提示我手动操作；不要索要或上传我的 API key、token 或凭据。
@@ -102,6 +102,10 @@ https://github.com/Cdkgfp/dsh-whale-pro
 ```
 
 也可以把本仓库克隆到固定目录后，用 plugin_manager 的本地链接安装方式指定该目录。首次安装后如果界面没有出现，请完全退出 DSH（含托盘）再重新打开。
+
+**升级后挂件消失时**，先在 `plugin_manager` 的插件列表里查看 `dsh-whale-pro` 的安装来源和运行状态。`link:` 安装会从原目录加载代码。移动或删除目录后，列表可能仍显示已选中，宿主启动时会跳过该插件。用管理器移除这条失效的安装，再从 GitHub 安装并启用。要继续本地开发，也可以重新链接到含本仓库 `package.json` 的新目录。账本和设置位于 `$DSH_HOME`，恢复安装时请保留。
+
+DSH Desktop `0.2.2-rc.5` 支持以 `github:Cdkgfp/dsh-whale-pro#<完整的 40 位提交 SHA>` 固定 Git 来源。这样安装的版本支持以后通过管理器更新到同一仓库的新提交。
 
 ### DSH Web
 
@@ -130,7 +134,7 @@ dsh plugin --profile web add link:.
 - 公开 GitHub 仓库；
 - 仓库 topics 包含 `dsh-plugin`、`dsh`、`deepseek-harness`；
 - 根目录有 `package.json`、`cordis.patch.yml`、README、MIT 许可和安装命令；
-- 当前正式版为 [v0.4.4 Release](https://github.com/Cdkgfp/dsh-whale-pro/releases/tag/v0.4.4)，包含认证安全修复。
+- 当前源码版本为 `0.4.5`。[v0.4.4 Release](https://github.com/Cdkgfp/dsh-whale-pro/releases/tag/v0.4.4) 记录了上一版的认证安全修复。
 
 DSH 插件市场/目录的收录规则：
 
@@ -166,7 +170,8 @@ dsh plugin --profile web add dsh-whale-pro
 
 ## 兼容性
 
-- 原版本的桌面开发环境记录：DSH Desktop `0.2.1-rc.3`（Electron 桌面客户端）。本次 `0.4.4` 修复执行了隔离后端回归，尚未在真实桌面会话中复测。
+- 原版本的桌面开发环境为 DSH Desktop `0.2.1-rc.3`（Electron 桌面客户端）。`0.4.4` 的认证修复通过了隔离后端回归。
+- `0.4.5` 已使用 DSH Desktop `0.2.2-rc.5` 安装包中的 Cordis、WebServer 和 Connection 做隔离验证，覆盖桌面脚本注入、路由认证、模拟账户余额读取、账本写入和插件卸载。前端测试覆盖打开聊天页即显示余额栏，以及停留三分钟后再进入聊天。真实账户余额和桌面画面需在客户端确认。
 - `0.4.4` 通过运行时能力检查强制要求宿主准入接口。本机 `0.2.1-rc.5` 的安装包包含该接口；尚未据此承诺最低兼容版本。缺少该能力的旧宿主不能使用插件接口，需要升级 DSH。
 - 插件结构是标准 DSH bundle 包；宿主 API 变化时可能需要跟随适配。
 - 前端 `assets/whale-widget.js` 由宿主按 mtime 热读取；修改前端后刷新页面即可，修改宿主 `lib/index.js` 需要重启 DSH。

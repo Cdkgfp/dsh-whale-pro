@@ -14587,6 +14587,7 @@ root.appendChild(body)
 root.appendChild(menuBtn)
 dshwBodyAppend(root)
 dshwBodyAppend(menuBox)
+try { dshwInitCompactPanel() } catch (err) { console.error('[whale] compact panel init failed', err) }
 
 // ===== PR #105 后半：DOM 守护（SPA 切路由 / 别的插件替换 body 子树时把节点摘掉）=====
 // 背景：DSH 是 SPA，切到会话列表 / 设置 / 插件市场再回来、或其它客户端插件整体替换
@@ -22962,15 +22963,12 @@ function pollLastTurn() {
 }
 setInterval(function () { pollLastTurn(); pollWaitState() }, 1000)
 }
-// 主界面检测通过（或稍后由 MutationObserver 检测到）后执行挂件初始化；非主界面不启动
-try { dshwTryStart(true) } catch (err) {}
-
 // ===== 简洁版：鲸鱼头顶常驻面板 =====
 // 目标：不重建整个挂件，只隐藏原来的大泡泡，在鲸鱼头顶放一块紧凑卡片：
 //   当前峰谷 + 距离下次切换的倒计时 / 00-24 连续进度条（峰谷不同颜色 + 当前时间细线）
 //   总余额、赠金、充值余额、今日已用。
 // 数据直接复用宿主已有的 /dsh-whale/balance.json，避免再改宿主半侧。
-(function () {
+function dshwInitCompactPanel() {
   if (window.__dshwCompactPanel) return
   window.__dshwCompactPanel = true
 
@@ -23296,11 +23294,9 @@ try { dshwTryStart(true) } catch (err) {}
     }
     window.__dshwCompactPanelVisible = function () { return !userHidden }
   } catch (err) {}
-  var tries = 0
-  var waitRoot = setInterval(function () {
-    if (document.querySelector('.dshwv-root')) { clearInterval(waitRoot); boot(); return }
-    if (++tries > 600) clearInterval(waitRoot)
-  }, 250)
-  if (document.querySelector('.dshwv-root')) { clearInterval(waitRoot); boot() }
-})()
+  boot()
+}
+
+// 首次加载与稍后进入聊天页共用同一次挂载。
+try { dshwTryStart(true) } catch (err) {}
 })()

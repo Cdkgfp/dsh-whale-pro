@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.5 — DSH Desktop compatibility
+
+- Mount the balance panel with the whale when the chat composer appears, including after long waits outside the chat view.
+- Handle asynchronous DSH account state and keep balance errors and timeouts scoped to each request.
+- Recognize question events from native and programmatic tool calls and match their completion to the owning session.
+- Document recovery when Desktop still points to a moved or deleted local plugin directory.
+
 ## 0.4.4 — backend security fixes
 
 - Require host admission for every plugin route; missing or failed authentication now denies access instead of falling back to Host/Origin checks. Preserve host 401/403 responses.
