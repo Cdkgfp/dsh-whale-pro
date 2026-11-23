@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.6 — Notification bubbles and panel modes
+
+- Close expired notification bubbles when the window regains focus, even when the original timer has been delayed.
+- Clear question and approval bubbles when their session is disposed or the host stops confirming the wait.
+- Add Off, Show on hover, and Always visible modes to the balance panel setting. The client remembers the selected mode.
+
 ## 0.4.5 — DSH Desktop compatibility
 
 - Mount the balance panel with the whale when the chat composer appears, including after long waits outside the chat view.

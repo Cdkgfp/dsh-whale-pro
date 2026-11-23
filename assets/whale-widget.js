@@ -669,6 +669,12 @@ var css = [
   '.dshwv-check:checked{background:#203170;border-color:#203170}',
   '.dshwv-check:checked::after{transform:translateX(14px)}',
   '.dshwv-check:disabled{opacity:.45;cursor:not-allowed}',
+  '.dshwv-compact-modes{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:rgba(32,49,112,.12);color:#203170}',
+  '.dshwv-compact-modes label{position:relative;cursor:pointer}',
+  '.dshwv-compact-modes input{position:absolute;width:1px;height:1px;opacity:0}',
+  '.dshwv-compact-modes span{display:block;padding:3px 9px;border-radius:999px;font-size:12px;line-height:1.25;white-space:nowrap}',
+  '.dshwv-compact-modes input:checked+span{background:#203170;color:#fff}',
+  '.dshwv-compact-modes input:focus-visible+span{outline:2px solid #465eb1;outline-offset:1px}',
   '.dshwv-settings-title{font-size:11px;font-weight:600;letter-spacing:.06em;color:#7b879d;margin:6px 0;text-transform:uppercase}',
   '.dshwv-settings-sep{height:1px;background:rgba(32,49,112,.2);margin:14px 0 12px}',
   '.dshwv-settings-row{display:flex;flex-wrap:nowrap;align-items:center;gap:5px;margin:8px 0;padding:1px 0;color:#203170;font-size:12px;line-height:1.35;min-height:26px}',
@@ -2474,23 +2480,47 @@ settingsSep()
 settingsTitle('行为')
 settingsPage.appendChild(row9)
 settingsPage.appendChild(rowHide)
-// 文字框开关：底部固定动作行，胶囊开关
-var compactToggle = document.createElement('input')
-compactToggle.type = 'checkbox'
-compactToggle.className = 'dshwv-check'
-compactToggle.checked = true
-compactToggle.title = '显示/隐藏小鲸鱼头顶的文字框'
+// 文字框显示模式
+var compactModeKey = 'dshw-compact-panel-mode'
+var compactMode = 'always'
+try {
+  var storedCompactMode = localStorage.getItem(compactModeKey)
+  if (storedCompactMode === 'off' || storedCompactMode === 'hover') compactMode = storedCompactMode
+} catch (err) {}
+var updateCompactPanelVisibility = null
 var compactLabel = document.createElement('span')
+compactLabel.id = 'dshwv-compact-mode-label'
 compactLabel.textContent = '文字框'
 compactLabel.style.flex = '1 1 auto'
 usageNavRow.appendChild(compactLabel)
-usageNavRow.appendChild(compactToggle)
-compactToggle.addEventListener('change', function () {
-  try {
-    if (typeof window.__dshwCompactPanelSetVisible === 'function') window.__dshwCompactPanelSetVisible(compactToggle.checked)
-    else if (typeof window.__dshwCompactPanelToggle === 'function') window.__dshwCompactPanelToggle()
-  } catch (err) {}
+var compactModes = document.createElement('div')
+compactModes.className = 'dshwv-compact-modes'
+compactModes.setAttribute('role', 'radiogroup')
+compactModes.setAttribute('aria-labelledby', compactLabel.id)
+var compactRadios = []
+var compactOptions = [['off', '关闭'], ['hover', '悬停显示'], ['always', '常驻']]
+compactOptions.forEach(function (option) {
+  var label = document.createElement('label')
+  var input = document.createElement('input')
+  input.type = 'radio'
+  input.name = 'dshwv-compact-mode'
+  input.value = option[0]
+  input.checked = compactMode === input.value
+  var caption = document.createElement('span')
+  caption.textContent = option[1]
+  label.appendChild(input)
+  label.appendChild(caption)
+  compactModes.appendChild(label)
+  compactRadios.push(input)
+  input.addEventListener('change', function () { if (input.checked) setCompactMode(input.value) })
 })
+usageNavRow.appendChild(compactModes)
+function setCompactMode(mode) {
+  compactMode = mode
+  for (var i = 0; i < compactRadios.length; i++) compactRadios[i].checked = compactRadios[i].value === mode
+  try { localStorage.setItem(compactModeKey, mode) } catch (err) {}
+  if (updateCompactPanelVisibility) updateCompactPanelVisibility()
+}
 
 // —— 音效（按压 / 任务结束 / 提问 / 授权 / 音频资源）——
 settingsSep()
@@ -2896,7 +2926,6 @@ function refreshSettingsAssets() {
       try { settingsAutoRows[j].toggle.checked = settingsAutoOn(settingsAutoRows[j].kind) } catch (err) {}
     }
     try { bubbleToggle.checked = bubbleOn !== false; bubbleToggle.disabled = false } catch (err) {}
-    try { compactToggle.checked = (typeof window.__dshwCompactPanelVisible === 'function') ? !!window.__dshwCompactPanelVisible() : true } catch (err) {}
     updateSettingsDisabled()
   } catch (err) {}
 }
@@ -2928,10 +2957,7 @@ var usageHideTimer = null
 var usageShowTimer = null
 function setUsageNavBtn(inUsage) {
   try {
-    var compactHidden = false
-    try {
-      if (typeof window.__dshwCompactPanelVisible === 'function') compactHidden = !window.__dshwCompactPanelVisible()
-    } catch (err) {}
+    var compactHidden = compactMode === 'off'
     usageRecBtn.textContent = inUsage ? '‹ 返回' : (compactHidden ? '显示文字框' : '隐藏文字框')
     usageRecBtn.title = inUsage ? '返回主菜单' : (compactHidden ? '显示小鲸鱼头顶的简洁文字框' : '隐藏小鲸鱼头顶的简洁文字框')
   } catch (err) {}
@@ -14936,33 +14962,32 @@ function restoreBubbleLines() {
 // 消耗=showCostBubble)独立触发, 消耗优先级最高可顶掉当前并暂停手动轮。
 var costBubbleTimer = null // 旧版计时器保留声明(新版 bubbleClearAll 仍清理)
 var bubbleTtlTimer = null
-// v789（issue #188/#172）：泡泡的自动收起**不能只靠 setTimeout** —— 页面被遮挡 / 最小化 / 切到后台时，
-// 浏览器会把定时器节流甚至挂起，于是"5 秒后收起"变成几十秒甚至永远不收（用户实测：点击泡一直不消失、
-// 刷新即恢复）。所以同时记一个**截止时刻**，在页面重新可见 / 拿到焦点时结算一次；再配一个每秒巡检兜底。
+var bubbleSceneSwapTimer = null
+// 定时器在后台可能延迟。恢复可见时按实际截止时间收起泡泡。
 var bubbleTtlDeadline = 0
-function bubbleTtlArmed(ttlMs) {
-  try { if (ttlMs > 0) bubbleTtlDeadline = Date.now() + ttlMs; else bubbleTtlDeadline = 0 } catch (err) { bubbleTtlDeadline = 0 }
+function bubbleStopTtl() {
+  clearTimeout(bubbleTtlTimer)
+  bubbleTtlTimer = null
+  bubbleTtlDeadline = 0
 }
-function bubbleTtlClear() { bubbleTtlDeadline = 0 }
-// 巡检：只在"本该已经到期"且计时器已经不在了（被节流/挂起）时补收一次
+function bubbleStartTtl(ttlMs) {
+  if (ttlMs > 0) {
+    bubbleTtlDeadline = Date.now() + ttlMs
+    bubbleTtlTimer = setTimeout(bubbleTtlSweep, ttlMs)
+  }
+}
 function bubbleTtlSweep() {
   try {
-    if (bubbleTtlTimer || !bubbleTtlDeadline) return
-    if (!bubbleScene || !(bubbleScene.ttlMs > 0)) { bubbleTtlDeadline = 0; return }
-    if (Date.now() < bubbleTtlDeadline) return
-    bubbleTtlDeadline = 0
-    bubbleAutoClose()
+    if (bubbleTtlDeadline && Date.now() >= bubbleTtlDeadline) bubbleAutoClose()
   } catch (err) {}
 }
-// 三条触发路径：页面重新可见（切标签回来）、窗口重新拿到焦点（最小化还原）、以及每秒一次的兜底巡检。
-// 正常前台运行时计时器按时收敛，巡检永远提前返回（不会误收下一个泡泡）。
 try {
   document.addEventListener('visibilitychange', function () { try { if (!document.hidden) bubbleTtlSweep() } catch (err) {} })
   window.addEventListener('focus', function () { bubbleTtlSweep() })
   window.addEventListener('pageshow', function () { bubbleTtlSweep() })
   setInterval(bubbleTtlSweep, 1000)
 } catch (err) {}
-var bubbleScene = null // { kind:'normal'|'random'|'cost', ttlMs }
+var bubbleScene = null // 当前泡泡场景
 var bubbleSeq = bubbleDefaultQueue() // 默认序列 = 与开发者线上生效一致(首次=余额,再次=随机语句);有配置后由 applyBubbleCfgSeq 覆盖
 var bubbleSeqIdx = 0 // 下一项下标(手动轮内推进)
 var bubbleRoundOn = false // 手动轮是否进行中(被消耗顶掉时保留, 结束后归零)
@@ -17885,7 +17910,9 @@ function bubbleRowsCanon(mods) {
   } catch (err) {}
 }
 function bubbleClearAll() {
-  try { if (bubbleTtlTimer) { clearTimeout(bubbleTtlTimer); bubbleTtlTimer = null } } catch (err) {}
+  bubbleStopTtl()
+  clearTimeout(bubbleSceneSwapTimer)
+  bubbleSceneSwapTimer = null
   try { if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = null } } catch (err) {}
   try { if (bubbleSwapTimer) { clearTimeout(bubbleSwapTimer); bubbleSwapTimer = null } } catch (err) {}
   try { if (hintFadeTimer) { clearTimeout(hintFadeTimer); hintFadeTimer = null } } catch (err) {}
@@ -17896,8 +17923,6 @@ function bubbleClearAll() {
   try { if (settleTimer) { clearTimeout(settleTimer); settleTimer = null } } catch (err) {}
 }
 function bubbleCloseVisual() {
-  // v789（issue #188）：视觉收起是"泡泡真的收掉了"的唯一出口 ⇒ 顺带把截止时刻清零（三处对齐之二）
-  bubbleTtlClear()
   // v771：泡泡一旦真的收起，等待标记必须一起复位。`waitShown` 平时由 bubbleRenderModules 按场景重算，
   // 但"整泡关闭"（hideBubble/hideCostBubble/hideWaitBubble…）不走渲染 ⇒ 不复位就会残留成 true，
   // 之后 showWaitBubble 会误判"已经在显示等待泡泡"（历史上正是这类不同步把等待泡泡卡死的）。
@@ -17912,7 +17937,7 @@ function bubbleCloseVisual() {
     try { gifEl.style.display = 'none' } catch (err) {}
   }, 240)
 }
-// 打开场景:统一清场 → 重置内容层 → 渲染 → 开框 → 布 TTL
+// 打开场景:统一清场 → 重置内容层 → 渲染 → 开框
 // 清掉 textBox 里遗留的模块行(自定义场景切走/关闭时,防止叠到默认/消耗内容上)
 function bubbleClearModuleRows() {
   try {
@@ -17940,11 +17965,12 @@ function sceneOpen(kind, renderFn, ttlMs) {
   bubbleClearModuleRows()
   try { gifEl.style.display = 'none'; gifEl.style.opacity = '' } catch (err) {}
   try { textBox.style.transition = ''; textBox.style.opacity = '' } catch (err) {}
-  bubbleScene = { kind: kind, ttlMs: ttlMs || 0 }
+  bubbleScene = { kind: kind }
   bubbleShown = true
   costBubbleActive = (kind === 'cost')
   bubbleRandomActive = (kind === 'random')
   lastHintText = null // 内容整体重置,提示行走“首次直写”,避免半途淡出残留
+  bubbleStartTtl(ttlMs)
   function finish() {
     try { renderFn() } catch (err) {}
     try { bubbleBox.classList.add('dshwv-pop-open') } catch (err) {}
@@ -17954,22 +17980,20 @@ function sceneOpen(kind, renderFn, ttlMs) {
       try {
         textBox.style.transition = 'opacity .16s ease'
         textBox.style.opacity = '1'
-        bubbleSwapTimer = setTimeout(function () {
-          bubbleSwapTimer = null
+        bubbleSceneSwapTimer = setTimeout(function () {
+          bubbleSceneSwapTimer = null
           try { textBox.style.transition = ''; textBox.style.opacity = '' } catch (err) {}
         }, 180)
       } catch (err) {}
     }
-    if (ttlMs > 0) { bubbleTtlArmed(ttlMs); bubbleTtlTimer = setTimeout(bubbleAutoClose, ttlMs) }
-    else bubbleTtlClear()
   }
   if (wasOpen) {
     // 内容切换:旧内容先淡出,再换新内容并淡入(可被新场景/关闭随时打断)
     try {
       textBox.style.transition = 'opacity .12s ease'
       textBox.style.opacity = '0'
-      bubbleSwapTimer = setTimeout(function () {
-        bubbleSwapTimer = null
+      bubbleSceneSwapTimer = setTimeout(function () {
+        bubbleSceneSwapTimer = null
         finish()
       }, 120)
     } catch (err) {
@@ -17980,22 +18004,9 @@ function sceneOpen(kind, renderFn, ttlMs) {
   }
 }
 function bubbleAutoClose() {
-  bubbleTtlTimer = null
-  // v789：走完这条就说明本次 TTL 已经结算，截止时刻必须清零，否则巡检会误收下一个泡泡
-  bubbleTtlClear()
-  if (bubbleScene && bubbleScene.kind === 'cost') { if (whaleSysSwapNext()) return; hideCostBubble(); return }
-  if (bubbleScene && bubbleScene.kind === 'alert') { if (whaleSysSwapNext()) return; hideUsageAlertBubble(); return }
-  // v761（#161 C5）：等待交互泡泡是**常驻**的（sceneOpen 收到 ttl 0 不布计时器），正常永远走不到这里；
-  // 这一支是防御性的（例如用户先点开等待泡泡再改设置导致 ttl 被重新布上），语义仍与其他系统泡泡一致。
-  if (bubbleScene && bubbleScene.kind === 'wait') { if (whaleSysSwapNext()) return; hideWaitBubble(); return }
+  if (bubbleScene && bubbleScene.kind === 'cost') { hideCostBubble(); return }
+  if (bubbleScene && bubbleScene.kind === 'alert') { hideUsageAlertBubble(); return }
   hideBubble()
-}
-// 重置当前泡泡的留存计时(点鲸鱼给第 1 泡续时,不清内容)
-function bubbleResetTtl() {
-  try { if (bubbleTtlTimer) { clearTimeout(bubbleTtlTimer); bubbleTtlTimer = null } } catch (err) {}
-  // v789：续时也要同步截止时刻，否则巡检会在"刚续过"的泡泡上提前动作（issue #188 提醒的三处对齐之一）
-  if (bubbleScene && bubbleScene.ttlMs > 0) { bubbleTtlArmed(bubbleScene.ttlMs); bubbleTtlTimer = setTimeout(bubbleAutoClose, bubbleScene.ttlMs) }
-  else bubbleTtlClear()
 }
 // 默认内容视图 = 现在待机内容(余额/今日已用),由 render/restore 维护
 function bubbleRenderDefault() { restoreBubbleLines() }
@@ -19389,7 +19400,7 @@ function showBubble() {
 function showBalanceBubble() {
   try {
     if (!bubbleOn || !bubbleBox || !textBox) return
-    if (costBubbleActive) return
+    if (whaleSysItem || costBubbleActive) return
     var cfg = (((usageSet || {}).events || {}).balance) || {}
     if (cfg.bubbleOn === false) return
     var mods = usageBalanceLinesOf(cfg)
@@ -19558,8 +19569,7 @@ function hideUsageAlertBubble() {
 // 复核后的实现方式（改动面最小的那一版）：
 //   · 复用既有系统泡泡链路（whaleSysPush / whaleSysTick / whaleSysSwapNext / whaleSysDone），
 //     不另造浮层；新增第四档 rank = 4（排在消耗之后，理由见 showWaitBubble 注释）；
-//   · 常驻 = **ttlMs 传 0**。sceneOpen 里 `if (ttlMs > 0) bubbleTtlTimer = setTimeout(...)`，
-//     所以 0 天然"不布自动关闭计时器"；bubbleResetTtl 也带 `ttlMs > 0` 守卫，不会给它补上计时器。
+//   · 等待泡泡的 ttlMs 为 0，由宿主等待状态驱动收起。
 //     既有 cost/alert 的取值（turnCostCloseMs / usageRemindTtlMs）完全没动。
 //   · 队列项 kind = 'cost' | 'alert' | 'wait'；'wait' 这一支只出现在 whaleSysTick /
 //     whaleSysSwapNext / bubbleAutoClose / bubbleNext 的**新增分支**里，alert/budget/cost 路径逐字未改。
@@ -22873,58 +22883,61 @@ try {
 //   ③ 用 localStorage 记住已响过的挂起 id ⇒ **刷新页面不会为同一个未回答的提问重复响**。
 var WAIT_URL = '/dsh-whale/wait.json'
 var WAIT_SOUND_KEY = 'dshw-wait-sound'
+var WAIT_REQUEST_TIMEOUT_MS = 5000
+var WAIT_STATE_EXPIRY_MS = 15000
 var waitSeenId = ''
+var waitPollInFlight = false
+var waitLastConfirmedAt = 0
 function waitEventCfg(kind) {
   try { return ((usageSet || {}).events || {})[kind] || {} } catch (err) { return {} }
 }
-function pollWaitState() {
+function expireWaitState() {
+  if (waitPendingId && Date.now() - waitLastConfirmedAt >= WAIT_STATE_EXPIRY_MS) {
+    // 服务暂时不可达时，隐藏已失去确认的提示。恢复后由宿主重新确认。
+    waitPendingId = ''
+    hideWaitBubble()
+  }
+}
+async function pollWaitState() {
+  if (waitPollInFlight) { expireWaitState(); return }
+  waitPollInFlight = true
   try {
-    fetch(WAIT_URL, { cache: 'no-store' })
-      .then(function (r) { return r.json() })
-      .then(function (d) {
-        if (!d || !d.ok) return
-        if (typeof d.sessionName === 'string') waitSessionName = d.sessionName
-        var p = d.pending || null
-        if (!p || !p.kind) {
-          // 挂起已解除：收起泡泡，并允许下一次挂起照常响
-          waitSeenId = ''
-          waitPendingId = '' // v777：挂起解除 ⇒ "被点掉"的标记一并作废（下一次挂起照常冒泡）
-          waitDismissedId = ''
-          if (typeof hideWaitBubble === 'function') hideWaitBubble()
-          return
-        }
-        var kind = p.kind === 'approval' ? 'approval' : 'question'
-        var ev = waitEventCfg(kind)
-        // v777：这条挂起已经被用户点掉了 ⇒ 不再自动弹回（但仍然照常响铃判定与去重；回答/批准后
-        // 上面的 !p 分支会把标记清掉，所以"下一次新的提问/授权"照常冒泡）。
-        waitPendingId = String(p.id || '')
-        if (waitPendingId && waitPendingId === waitDismissedId) {
-          // 什么都不做：既不显示，也不清 waitSeenId（同一挂起不重复响）
-        } else {
-          if (ev.bubbleOn !== false && typeof showWaitBubble === 'function') showWaitBubble(kind, p)
-        }
-        // v771：**每秒都把泡泡与宿主的挂起状态对齐一次**（showWaitBubble 幂等：同类直接返回 false，
-        // 不会重渲染）。旧实现只在"新 id"时才调显示，于是一旦出现瞬时不同步（换类型 / 泡泡被别的
-        // 场景顶掉 / 某次渲染失败），泡泡就会卡在那个状态再也回不来 —— 这正是真机那次卡死的另一半原因。
-        // 现在任何不同步都会在 1 秒内自愈：该换内容就换、该收就收（收在下面 !p 分支）。
-        // 门控照旧：该事件的「冒泡提示」关掉就不冒泡（与声音各自独立判）。
-        // v777：显示那一步已上移到"被点掉的挂起"判定里（见上面的 waitDismissedId 分支），这里不再重复调用。
-        // 声音：同一个未回答的挂起只响一次（刷新页面也不重复响）
-        var key = kind + ':' + String(p.id || '')
-        var remembered = ''
-        try { remembered = localStorage.getItem(WAIT_SOUND_KEY) || '' } catch (err) {}
-        if (key === waitSeenId || key === remembered) return
-        waitSeenId = key
-        try { localStorage.setItem(WAIT_SOUND_KEY, key) } catch (err) {}
-        var on = ev.on !== false
-        var sel = ev.sel || ''
-        // v762：音效行新增的「是否播这个音效」开关（events.<kind>.soundOn，缺省视为开）。
-        // 门控 = 该事件总开关 on + 选了音效 sel（下拉已无「静音」，正常不为空）+ soundOn。
-        // 任务结束音的播放判定不在这里，仍读既有的 usageSet.taskEnd.on（见 playTaskEndSound）。
-        if (on && sel && ev.soundOn !== false) playBindingSound({ on: true, sel: sel }, ev)
-      })
-      .catch(function () {})
-  } catch (err) {}
+    var options = { cache: 'no-store' }
+    if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) options.signal = AbortSignal.timeout(WAIT_REQUEST_TIMEOUT_MS)
+    var response = await fetch(WAIT_URL, options)
+    if (!response.ok) return
+    var d = await response.json()
+    if (!d || !d.ok) return
+    waitLastConfirmedAt = Date.now()
+    if (typeof d.sessionName === 'string') waitSessionName = d.sessionName
+    var p = d.pending
+    if (!p || !p.kind) {
+      waitSeenId = ''
+      waitPendingId = ''
+      waitDismissedId = ''
+      hideWaitBubble()
+      return
+    }
+    var kind = p.kind === 'approval' ? 'approval' : 'question'
+    var ev = waitEventCfg(kind)
+    waitPendingId = String(p.id || '')
+    if (bubbleOn && ev.on !== false && ev.bubbleOn !== false && (!waitDismissedId || waitPendingId !== waitDismissedId)) showWaitBubble(kind, p)
+    else hideWaitBubble()
+
+    // 同一条等待只响一次，刷新页面后也沿用去重记录。
+    var key = kind + ':' + waitPendingId
+    var remembered = ''
+    try { remembered = localStorage.getItem(WAIT_SOUND_KEY) || '' } catch (err) {}
+    if (key === waitSeenId || key === remembered) return
+    waitSeenId = key
+    try { localStorage.setItem(WAIT_SOUND_KEY, key) } catch (err) {}
+    if (ev.on !== false && ev.sel && ev.soundOn !== false) playBindingSound({ on: true, sel: ev.sel }, ev)
+  } catch (err) {
+    // 等待状态有效期内允许轮询失败，下一次继续查询。
+  } finally {
+    waitPollInFlight = false
+    expireWaitState()
+  }
 }
 function pollLastTurn() {
   try {
@@ -22962,8 +22975,7 @@ function pollLastTurn() {
   } catch (err) {}
 }
 setInterval(function () { pollLastTurn(); pollWaitState() }, 1000)
-}
-// ===== 简洁版：鲸鱼头顶常驻面板 =====
+// ===== 简洁版：鲸鱼头顶文字框 =====
 // 目标：不重建整个挂件，只隐藏原来的大泡泡，在鲸鱼头顶放一块紧凑卡片：
 //   当前峰谷 + 距离下次切换的倒计时 / 00-24 连续进度条（峰谷不同颜色 + 当前时间细线）
 //   总余额、赠金、充值余额、今日已用。
@@ -22984,7 +22996,7 @@ function dshwInitCompactPanel() {
   var refs = {}
   var scheduleKey = ''
   var lastDataAt = 0
-  var userHidden = false
+  var whaleHovered = false
 
   function pad2(n) { return String(n).padStart(2, '0') }
   function make(tag, cls, text) {
@@ -23235,9 +23247,8 @@ function dshwInitCompactPanel() {
   function position() {
     ensurePanel()
     if (!panel) return
-    if (userHidden) { panel.style.display = 'none'; return }
-    var root = document.querySelector('.dshwv-root')
-    if (!root || !root.isConnected) { panel.style.display = 'none'; return }
+    var visible = compactMode === 'always' || (compactMode === 'hover' && whaleHovered)
+    if (!visible || !root.isConnected) { panel.style.display = 'none'; return }
     var r = root.getBoundingClientRect()
     if (!r || r.width < 20) { panel.style.display = 'none'; return }
     panel.style.display = 'block'
@@ -23270,31 +23281,42 @@ function dshwInitCompactPanel() {
     setInterval(tick, 1000)
     setInterval(position, 150)
     window.addEventListener('resize', position)
+    img.addEventListener('pointerenter', function (event) {
+      if (event.pointerType !== 'mouse') return
+      whaleHovered = true
+      if (compactMode === 'hover') updateCompactPanelVisibility()
+    })
+    img.addEventListener('pointerleave', function (event) {
+      if (event.pointerType === 'mouse') clearHover()
+    })
+    img.addEventListener('pointercancel', clearHover)
+    window.addEventListener('blur', clearHover)
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) { fetchState(); render(); position() }
+      if (document.hidden) clearHover()
+      else { fetchState(); render(); position() }
     })
   }
-  function setCompactVisible(visible) {
-    userHidden = !visible
-    if (!panel) buildPanel()
-    if (!panel) return
-    if (userHidden) { panel.style.display = 'none'; return }
-    panel.style.display = 'block'
-    render()
+  function clearHover() {
+    whaleHovered = false
+    if (compactMode === 'hover') position()
+  }
+  updateCompactPanelVisibility = function () {
     position()
+    if (panel && panel.style.display !== 'none') render()
   }
   try {
     window.__dshwCompactPanelToggle = function () {
-      setCompactVisible(userHidden)
-      return !userHidden
+      setCompactMode(compactMode === 'off' ? 'always' : 'off')
+      return compactMode !== 'off'
     }
     window.__dshwCompactPanelSetVisible = function (visible) {
-      setCompactVisible(visible !== false)
-      return !userHidden
+      setCompactMode(visible !== false ? 'always' : 'off')
+      return compactMode !== 'off'
     }
-    window.__dshwCompactPanelVisible = function () { return !userHidden }
+    window.__dshwCompactPanelVisible = function () { return compactMode !== 'off' }
   } catch (err) {}
   boot()
+}
 }
 
 // 首次加载与稍后进入聊天页共用同一次挂载。

@@ -110,6 +110,21 @@ test('registered backend routes enforce admission before data access and preserv
     emit('chat', 'tool/ptc-dispatch', { name: 'ask_user_question', callId: 'outer', subCallId: 'inner' })
     assert.equal(await pending(), null)
   })
+  await t.test('clears approval bubbles on a matching decision or session disposal', async () => {
+    const emit = (id, type, data) => listeners.get('session/event')({ id }, { type, data })
+    const dispose = id => listeners.get('session/disposed')({ id })
+    const pending = async () => JSON.parse((await invoke('/dsh-whale/wait.json', 'GET')).body).pending
+    emit('chat', 'approval/asked', { id: 'approval' })
+    emit('chat', 'approval/policy', {})
+    emit('other', 'approval/decided', { id: 'approval' })
+    dispose('other')
+    assert.equal((await pending()).id, 'approval')
+    emit('chat', 'approval/decided', { id: 'approval' })
+    assert.equal(await pending(), null)
+    emit('chat', 'tool/call', { name: 'ask_user_question', callId: 'question' })
+    dispose('chat')
+    assert.equal(await pending(), null)
+  })
   await t.test('GET cannot delete or pin resources', async () => {
     for (const routePath of ['/dsh-whale/role-pin.json', '/dsh-whale/role-delete.json', '/dsh-whale/bubble-img-upload.json']) assert.equal((await invoke(routePath, 'GET', { id: 'role_test', action: 'delete' })).status, 405)
   })
